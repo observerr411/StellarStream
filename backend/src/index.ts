@@ -18,6 +18,7 @@ import batchRoutes from './api/routes.js';
 import healthRoutes from './api/health.routes.js';
 import { scheduleSnapshotMaintenance } from './services/snapshot.scheduler.js';
 import { StaleStreamCleanupWorker } from './stale-stream-cleanup.worker.js';
+import { bigintSerializer } from './middleware/bigintSerializer.js';
 
 Sentry.init({
   dsn: process.env.SENTRY_DSN, // add to .env
@@ -85,6 +86,7 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 
+app.use(bigintSerializer);
 app.use(express.json());
 app.use(authMiddleware);
 
