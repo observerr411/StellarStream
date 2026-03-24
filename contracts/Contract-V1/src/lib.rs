@@ -424,13 +424,14 @@ impl StellarStreamContract {
         // Grant all roles to admin
         env.storage()
             .instance()
-            .set(&DataKey::Role(admin.clone(), Role::Admin), &true);
+            .set(&DataKey::Role(admin.clone(), Role::SuperAdmin), &true);
         env.storage()
             .instance()
-            .set(&DataKey::Role(admin.clone(), Role::Pauser), &true);
-        env.storage()
-            .instance()
-            .set(&DataKey::Role(admin.clone(), Role::TreasuryManager), &true);
+            .set(&DataKey::Role(admin.clone(), Role::Guardian), &true);
+        env.storage().instance().set(
+            &DataKey::Role(admin.clone(), Role::FinancialOperator),
+            &true,
+        );
     }
 
     // ========== RBAC Functions ==========
@@ -440,14 +441,14 @@ impl StellarStreamContract {
         admin.require_auth();
 
         // Check if caller has Admin role
-        if !Self::has_role(&env, &admin, Role::Admin) {
+        if !Self::has_role(&env, &admin, Role::SuperAdmin) {
             panic!("{}", Error::Unauthorized as u32);
         }
 
         // Grant the role
         env.storage()
             .instance()
-            .set(&DataKey::Role(target.clone(), role.clone()), &true);
+            .set(&DataKey::Role(target.clone(), role), &true);
 
         // Emit event
         env.events().publish((symbol_short!("grant"), target), role);
@@ -458,14 +459,14 @@ impl StellarStreamContract {
         admin.require_auth();
 
         // Check if caller has Admin role
-        if !Self::has_role(&env, &admin, Role::Admin) {
+        if !Self::has_role(&env, &admin, Role::SuperAdmin) {
             return; // Error::Unauthorized;
         }
 
         // Revoke the role
         env.storage()
             .instance()
-            .remove(&DataKey::Role(target.clone(), role.clone()));
+            .remove(&DataKey::Role(target.clone(), role));
 
         // Emit event
         env.events()
@@ -493,7 +494,7 @@ impl StellarStreamContract {
         admin.require_auth();
 
         // Check if caller has Admin role
-        if !Self::has_role(&env, &admin, Role::Admin) {
+        if !Self::has_role(&env, &admin, Role::SuperAdmin) {
             return; // Error::Unauthorized;
         }
 
@@ -519,7 +520,7 @@ impl StellarStreamContract {
         let has_admin: bool = env
             .storage()
             .instance()
-            .get(&DataKey::Role(admin, Role::Admin))
+            .get(&DataKey::Role(admin, Role::SuperAdmin))
             .unwrap_or(false);
         if !has_admin {
             soroban_sdk::panic_with_error!(&env, Error::Unauthorized);
@@ -549,7 +550,7 @@ impl StellarStreamContract {
         let has_admin: bool = env
             .storage()
             .instance()
-            .get(&DataKey::Role(admin, Role::Admin))
+            .get(&DataKey::Role(admin, Role::SuperAdmin))
             .unwrap_or(false);
         if !has_admin {
             soroban_sdk::panic_with_error!(&env, Error::Unauthorized);
@@ -984,7 +985,7 @@ impl StellarStreamContract {
 
     pub fn execute_request(env: Env, admin: Address, request_id: u64) -> Result<u64, Error> {
         admin.require_auth();
-        if !Self::has_role(&env, &admin, Role::Admin) {
+        if !Self::has_role(&env, &admin, Role::SuperAdmin) {
             return Err(Error::Unauthorized);
         }
         let mut request: ContributorRequest = env
@@ -1112,7 +1113,7 @@ mod test {
         env.as_contract(contract_id, || {
             env.storage()
                 .instance()
-                .set(&DataKey::Role(admin.clone(), Role::Admin), &true);
+                .set(&DataKey::Role(admin.clone(), Role::SuperAdmin), &true);
         });
     }
 
@@ -2060,7 +2061,7 @@ mod test {
         env.as_contract(&contract_id, || {
             env.storage()
                 .instance()
-                .set(&DataKey::Role(admin.clone(), Role::Admin), &true);
+                .set(&DataKey::Role(admin.clone(), Role::SuperAdmin), &true);
         });
 
         // Admin restricts an address

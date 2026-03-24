@@ -1,3 +1,4 @@
+pub use crate::rbac::Role;
 use soroban_sdk::{contracttype, Address, BytesN, Vec};
 
 // Interest distribution strategies
@@ -21,16 +22,6 @@ pub const INTEREST_SPLIT_ALL: u32 = 0b111; // 7: 33/33/33 split
 pub enum CurveType {
     Linear = 0,
     Exponential = 1,
-}
-
-// Role definitions for RBAC
-#[contracttype]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub enum Role {
-    Admin,             // Can grant/revoke roles, upgrade contract
-    Pauser,            // Can pause/unpause contract
-    TreasuryManager,   // Can update fees and treasury address
-    ComplianceOfficer, // Can execute regulatory clawbacks
 }
 
 #[contracttype]
