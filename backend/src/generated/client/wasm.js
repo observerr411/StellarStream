@@ -131,17 +131,36 @@ exports.Prisma.StreamScalarFieldEnum = {
   tokenAddress: 'tokenAddress',
   amount: 'amount',
   duration: 'duration',
+  version: 'version',
   status: 'status',
   withdrawn: 'withdrawn',
   legacy: 'legacy',
   migrated: 'migrated',
   isPrivate: 'isPrivate',
   yieldEnabled: 'yieldEnabled',
+  contractId: 'contractId',
   vaultContractId: 'vaultContractId',
   vaultShareBalance: 'vaultShareBalance',
   vaultRatioScale: 'vaultRatioScale',
   accruedInterest: 'accruedInterest',
   lastYieldAccrualAt: 'lastYieldAccrualAt',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.ContractEventScalarFieldEnum = {
+  id: 'id',
+  eventId: 'eventId',
+  contractId: 'contractId',
+  ledgerSequence: 'ledgerSequence',
+  ledgerClosedAt: 'ledgerClosedAt',
+  txHash: 'txHash',
+  eventType: 'eventType',
+  eventIndex: 'eventIndex',
+  topicsXdr: 'topicsXdr',
+  valueXdr: 'valueXdr',
+  decodedTopics: 'decodedTopics',
+  decodedValue: 'decodedValue',
+  inSuccessfulContractCall: 'inSuccessfulContractCall',
   createdAt: 'createdAt'
 };
 
@@ -274,6 +293,11 @@ exports.Prisma.SortOrder = {
   desc: 'desc'
 };
 
+exports.Prisma.NullableJsonNullValueInput = {
+  DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull
+};
+
 exports.Prisma.QueryMode = {
   default: 'default',
   insensitive: 'insensitive'
@@ -282,6 +306,12 @@ exports.Prisma.QueryMode = {
 exports.Prisma.NullsOrder = {
   first: 'first',
   last: 'last'
+};
+
+exports.Prisma.JsonNullValueFilter = {
+  DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull,
+  AnyNull: Prisma.AnyNull
 };
 exports.StreamStatus = exports.$Enums.StreamStatus = {
   ACTIVE: 'ACTIVE',
@@ -298,6 +328,7 @@ exports.NotificationPlatform = exports.$Enums.NotificationPlatform = {
 
 exports.Prisma.ModelName = {
   Stream: 'Stream',
+  ContractEvent: 'ContractEvent',
   TokenPrice: 'TokenPrice',
   Webhook: 'Webhook',
   SyncState: 'SyncState',

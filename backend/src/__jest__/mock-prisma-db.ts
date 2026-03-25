@@ -9,11 +9,30 @@ export type MockStreamRow = {
   tokenAddress: string | null;
   amount: string;
   duration: number | null;
+  version: number;
   status: StreamStatus | "ACTIVE" | "PAUSED" | "COMPLETED" | "CANCELED";
   withdrawn: string | null;
   legacy: boolean;
   migrated: boolean;
   isPrivate: boolean;
+  yieldEnabled: boolean;
+  contractId: string | null;
+};
+
+export type MockContractEventRow = {
+  id: string;
+  eventId: string;
+  contractId: string;
+  ledgerSequence: number;
+  ledgerClosedAt: string;
+  txHash: string;
+  eventType: string;
+  eventIndex: number;
+  topicsXdr: string[];
+  valueXdr: string;
+  decodedTopics: unknown;
+  decodedValue: unknown;
+  inSuccessfulContractCall: boolean;
 };
 
 export type MockWebhookRow = {
@@ -50,6 +69,7 @@ export const mockDb = {
   streams: [] as MockStreamRow[],
   webhooks: [] as MockWebhookRow[],
   eventLogs: [] as MockEventLogRow[],
+  contractEvents: [] as MockContractEventRow[],
   ledgerHashes: [] as LedgerHashRow[],
   attemptedStreamCreates: 0,
   _idSeq: 1,
@@ -58,12 +78,17 @@ export const mockDb = {
     this.streams = [];
     this.webhooks = [];
     this.eventLogs = [];
+    this.contractEvents = [];
     this.ledgerHashes = [];
     this.attemptedStreamCreates = 0;
     this._idSeq = 1;
   },
 
-  seedWebhook(input: { url: string; isActive?: boolean; description?: string }): void {
+  seedWebhook(input: {
+    url: string;
+    isActive?: boolean;
+    description?: string;
+  }): void {
     this.webhooks.push({
       id: `wh_${this._idSeq++}`,
       url: input.url,
@@ -101,11 +126,15 @@ export function createMockPrismaClient() {
           tokenAddress: data.tokenAddress ?? null,
           amount: String(data.amount ?? "0"),
           duration: data.duration ?? null,
+          version: Number(data.version ?? 1),
           status: (data.status as any) ?? "ACTIVE",
           withdrawn: data.withdrawn ?? "0",
           legacy: Boolean(data.legacy ?? false),
           migrated: Boolean(data.migrated ?? false),
           isPrivate: Boolean(data.isPrivate ?? false),
+          yieldEnabled: Boolean(data.yieldEnabled ?? false),
+          contractId:
+            typeof data.contractId === "string" ? data.contractId : null,
         };
 
         mockDb.streams.push(row);
@@ -119,8 +148,10 @@ export function createMockPrismaClient() {
         if (where.OR && Array.isArray(where.OR)) {
           rows = rows.filter((row) =>
             where.OR.some((clause: any) => {
-              if (typeof clause?.sender === "string") return row.sender === clause.sender;
-              if (typeof clause?.receiver === "string") return row.receiver === clause.receiver;
+              if (typeof clause?.sender === "string")
+                return row.sender === clause.sender;
+              if (typeof clause?.receiver === "string")
+                return row.receiver === clause.receiver;
               return false;
             }),
           );
@@ -132,7 +163,9 @@ export function createMockPrismaClient() {
 
         if (where.tokenAddress?.in && Array.isArray(where.tokenAddress.in)) {
           const allowed = new Set(where.tokenAddress.in.map(String));
-          rows = rows.filter((row) => row.tokenAddress != null && allowed.has(row.tokenAddress));
+          rows = rows.filter(
+            (row) => row.tokenAddress != null && allowed.has(row.tokenAddress),
+          );
         }
 
         // Best-effort orderBy { id: "desc" } support.
@@ -156,17 +189,24 @@ export function createMockPrismaClient() {
 
     eventLog: {
       upsert: jest.fn(async (arg: any) => {
-        const eventIndex: number = arg.where?.txHash_eventIndex?.eventIndex ?? 0;
-        const txHash: string = String(arg.where?.txHash_eventIndex?.txHash ?? "");
+        const eventIndex: number =
+          arg.where?.txHash_eventIndex?.eventIndex ?? 0;
+        const txHash: string = String(
+          arg.where?.txHash_eventIndex?.txHash ?? "",
+        );
 
-        const existing = mockDb.eventLogs.find((e) => e.txHash === txHash && e.eventIndex === eventIndex);
+        const existing = mockDb.eventLogs.find(
+          (e) => e.txHash === txHash && e.eventIndex === eventIndex,
+        );
         const incoming = arg.create as Partial<MockEventLogRow>;
 
         if (existing) {
           existing.eventType = String(incoming.eventType ?? existing.eventType);
           existing.streamId = String(incoming.streamId ?? existing.streamId);
           existing.ledger = Number(incoming.ledger ?? existing.ledger);
-          existing.ledgerClosedAt = String(incoming.ledgerClosedAt ?? existing.ledgerClosedAt);
+          existing.ledgerClosedAt = String(
+            incoming.ledgerClosedAt ?? existing.ledgerClosedAt,
+          );
           existing.sender = incoming.sender ?? null;
           existing.receiver = incoming.receiver ?? null;
           existing.amount = (incoming.amount ?? null) as any;
@@ -196,11 +236,80 @@ export function createMockPrismaClient() {
       }),
     },
 
+    contractEvent: {
+      upsert: jest.fn(async (arg: any) => {
+        const eventId = String(arg.where?.eventId ?? arg.create?.eventId ?? "");
+        const incoming = arg.create as Partial<MockContractEventRow>;
+        const existing = mockDb.contractEvents.find(
+          (event) => event.eventId === eventId,
+        );
+
+        if (existing) {
+          existing.contractId = String(
+            arg.update?.contractId ?? existing.contractId,
+          );
+          existing.ledgerSequence = Number(
+            arg.update?.ledgerSequence ?? existing.ledgerSequence,
+          );
+          existing.ledgerClosedAt = String(
+            arg.update?.ledgerClosedAt ?? existing.ledgerClosedAt,
+          );
+          existing.txHash = String(arg.update?.txHash ?? existing.txHash);
+          existing.eventType = String(
+            arg.update?.eventType ?? existing.eventType,
+          );
+          existing.eventIndex = Number(
+            arg.update?.eventIndex ?? existing.eventIndex,
+          );
+          existing.topicsXdr = Array.isArray(arg.update?.topicsXdr)
+            ? [...arg.update.topicsXdr]
+            : existing.topicsXdr;
+          existing.valueXdr = String(arg.update?.valueXdr ?? existing.valueXdr);
+          existing.decodedTopics =
+            arg.update?.decodedTopics ?? existing.decodedTopics;
+          existing.decodedValue =
+            arg.update?.decodedValue ?? existing.decodedValue;
+          existing.inSuccessfulContractCall = Boolean(
+            arg.update?.inSuccessfulContractCall ??
+              existing.inSuccessfulContractCall,
+          );
+          return existing;
+        }
+
+        const row: MockContractEventRow = {
+          id: createId("contract_event"),
+          eventId,
+          contractId: String(incoming.contractId ?? ""),
+          ledgerSequence: Number(incoming.ledgerSequence ?? 0),
+          ledgerClosedAt: String(incoming.ledgerClosedAt ?? ""),
+          txHash: String(incoming.txHash ?? ""),
+          eventType: String(incoming.eventType ?? ""),
+          eventIndex: Number(incoming.eventIndex ?? 0),
+          topicsXdr: Array.isArray(incoming.topicsXdr)
+            ? [...incoming.topicsXdr]
+            : [],
+          valueXdr: String(incoming.valueXdr ?? ""),
+          decodedTopics: incoming.decodedTopics ?? null,
+          decodedValue: incoming.decodedValue ?? null,
+          inSuccessfulContractCall: Boolean(
+            incoming.inSuccessfulContractCall ?? true,
+          ),
+        };
+
+        mockDb.contractEvents.push(row);
+        return row;
+      }),
+    },
+
     ledgerHash: {
       upsert: jest.fn(async (arg: any) => {
-        const sequence = Number(arg.where?.sequence ?? arg.create?.sequence ?? 0);
+        const sequence = Number(
+          arg.where?.sequence ?? arg.create?.sequence ?? 0,
+        );
         const hash = String(arg.update?.hash ?? arg.create?.hash ?? "");
-        const existing = mockDb.ledgerHashes.find((h) => h.sequence === sequence);
+        const existing = mockDb.ledgerHashes.find(
+          (h) => h.sequence === sequence,
+        );
         if (existing) {
           existing.hash = hash;
           return existing;
@@ -211,7 +320,10 @@ export function createMockPrismaClient() {
       }),
 
       findMany: jest.fn(async (_arg: any) => {
-        return mockDb.ledgerHashes.map((h) => ({ sequence: h.sequence, hash: h.hash }));
+        return mockDb.ledgerHashes.map((h) => ({
+          sequence: h.sequence,
+          hash: h.hash,
+        }));
       }),
     },
   };
@@ -230,8 +342,10 @@ export function createMockLibPrisma() {
         if (where.OR && Array.isArray(where.OR)) {
           rows = rows.filter((row) =>
             where.OR.some((clause: any) => {
-              if (typeof clause?.sender === "string") return row.sender === clause.sender;
-              if (typeof clause?.receiver === "string") return row.receiver === clause.receiver;
+              if (typeof clause?.sender === "string")
+                return row.sender === clause.sender;
+              if (typeof clause?.receiver === "string")
+                return row.receiver === clause.receiver;
               return false;
             }),
           );
@@ -243,7 +357,9 @@ export function createMockLibPrisma() {
 
         if (where.tokenAddress?.in && Array.isArray(where.tokenAddress.in)) {
           const allowed = new Set(where.tokenAddress.in.map(String));
-          rows = rows.filter((row) => row.tokenAddress != null && allowed.has(row.tokenAddress));
+          rows = rows.filter(
+            (row) => row.tokenAddress != null && allowed.has(row.tokenAddress),
+          );
         }
 
         if (arg.orderBy?.id === "desc") {
@@ -258,4 +374,3 @@ export function createMockLibPrisma() {
     },
   };
 }
-

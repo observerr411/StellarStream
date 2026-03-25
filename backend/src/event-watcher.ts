@@ -11,7 +11,7 @@ import {
   parseProposalCreatedEventXdr,
 } from "./event-parser";
 import { scValToNative, xdr } from "@stellar/stellar-sdk";
-import { PrismaClient } from "./generated/client/index.js";
+import { Prisma, PrismaClient } from "./generated/client/index.js";
 import { computeEventHash } from "./lib/event-hash.js";
 import { LedgerVerificationService } from "./services/ledger-verification.service.js";
 import { AuditLogService } from "./services/audit-log.service";
@@ -267,6 +267,8 @@ export class EventWatcher {
 
     const eventType = extractEventType(parsed.topics);
 
+    await this.persistContractEvent(parsed, eventType, event);
+
     // Log the raw event to console (as per acceptance criteria)
     logger.event(eventType, {
       id: parsed.id,
@@ -377,6 +379,8 @@ export class EventWatcher {
                     receiver: string;
                     amount: string;
                     duration: number | null;
+                    version: number;
+                    contractId: string;
                   };
                 }) => Promise<unknown>;
               };
@@ -389,6 +393,8 @@ export class EventWatcher {
               receiver,
               amount,
               duration,
+              version: 2,
+              contractId: this.config.contractId,
             },
           });
           logger.info("Stream successfully saved to Prisma DB", {
@@ -711,6 +717,81 @@ export class EventWatcher {
       topicsXdr,
       valueXdr,
     });
+  }
+
+  private async persistContractEvent(
+    parsed: ParsedContractEvent,
+    eventType: string,
+    rawEvent: SorobanRpc.Api.EventResponse,
+  ): Promise<void> {
+    await prisma.contractEvent.upsert({
+      where: {
+        eventId: parsed.id,
+      },
+      update: {
+        contractId: parsed.contractId,
+        ledgerSequence: parsed.ledger,
+        ledgerClosedAt: parsed.ledgerClosedAt,
+        txHash: parsed.txHash,
+        eventType,
+        eventIndex: parsed.eventIndex,
+        topicsXdr: parsed.topics,
+        valueXdr: rawEvent.value.toXDR("base64"),
+        decodedTopics: this.normalizeForJson(
+          rawEvent.topic.map((topic) => scValToNative(topic)),
+        ),
+        decodedValue: this.normalizeForJson(parsed.value),
+        inSuccessfulContractCall: parsed.inSuccessfulContractCall,
+      },
+      create: {
+        eventId: parsed.id,
+        contractId: parsed.contractId,
+        ledgerSequence: parsed.ledger,
+        ledgerClosedAt: parsed.ledgerClosedAt,
+        txHash: parsed.txHash,
+        eventType,
+        eventIndex: parsed.eventIndex,
+        topicsXdr: parsed.topics,
+        valueXdr: rawEvent.value.toXDR("base64"),
+        decodedTopics: this.normalizeForJson(
+          rawEvent.topic.map((topic) => scValToNative(topic)),
+        ),
+        decodedValue: this.normalizeForJson(parsed.value),
+        inSuccessfulContractCall: parsed.inSuccessfulContractCall,
+      },
+    });
+  }
+
+  private normalizeForJson(
+    value: unknown,
+  ): Prisma.InputJsonValue | Prisma.NullableJsonNullValueInput {
+    if (value === null || value === undefined) {
+      return Prisma.JsonNull;
+    }
+    if (typeof value === "bigint") {
+      return value.toString();
+    }
+    if (
+      typeof value === "string" ||
+      typeof value === "number" ||
+      typeof value === "boolean"
+    ) {
+      return value;
+    }
+    if (Array.isArray(value)) {
+      return value.map(
+        (item) => this.normalizeForJson(item) as Prisma.InputJsonValue,
+      );
+    }
+    if (typeof value === "object") {
+      return Object.fromEntries(
+        Object.entries(value as Record<string, unknown>).map(([key, entry]) => [
+          key,
+          this.normalizeForJson(entry),
+        ]),
+      ) as Prisma.InputJsonObject;
+    }
+    return String(value);
   }
 
   private readStreamId(eventData: Record<string, unknown>): string | null {

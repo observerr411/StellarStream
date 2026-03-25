@@ -21,12 +21,14 @@ model Stream {
   tokenAddress String?
   amount       String       // Store as string to handle large numbers safely
   duration     Int?
+  version      Int          @default(1)
   status       StreamStatus @default(ACTIVE)
   withdrawn    String?      @default("0")
   legacy       Boolean      @default(false) // true = originated from V1 contract
   migrated     Boolean      @default(false) // true = V1 stream superseded by V2
   isPrivate    Boolean      @default(false)
-  yieldEnabled Boolean      @default(false)
+  yieldEnabled Boolean      @default(false) @map("yield_enabled")
+  contractId   String?      @map("contract_id")
   vaultContractId String?
   vaultShareBalance String?
   vaultRatioScale String?
@@ -39,6 +41,26 @@ model Stream {
   @@index([streamId])
   @@index([legacy])
   @@index([yieldEnabled, status])
+}
+
+model ContractEvent {
+  id                       String   @id @default(cuid())
+  eventId                  String   @unique @map("event_id")
+  contractId               String   @map("contract_id")
+  ledgerSequence           Int      @map("ledger_sequence")
+  ledgerClosedAt           String   @map("ledger_closed_at")
+  txHash                   String   @map("tx_hash")
+  eventType                String   @map("event_type")
+  eventIndex               Int      @default(0) @map("event_index")
+  topicsXdr                String[] @map("topics_xdr")
+  valueXdr                 String   @map("value_xdr")
+  decodedTopics            Json?    @map("decoded_topics")
+  decodedValue             Json?    @map("decoded_value")
+  inSuccessfulContractCall Boolean  @default(true) @map("in_successful_contract_call")
+  createdAt                DateTime @default(now())
+
+  @@index([contractId, ledgerSequence])
+  @@index([txHash, eventIndex])
 }
 
 // Token prices for leaderboard volume calculations
