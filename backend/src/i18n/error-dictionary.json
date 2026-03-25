@@ -1,0 +1,74 @@
+{
+  "ERR_INVALID_ADDRESS_FORMAT": {
+    "en": "Invalid address format",
+    "ar": "تنسيق العنوان غير صالح",
+    "fr": "Format d'adresse invalide",
+    "es": "Formato de direccion no valido"
+  },
+  "ERR_INVALID_PRIVACY_BODY": {
+    "en": "Invalid body. 'isPrivate' boolean is required.",
+    "ar": "نص الطلب غير صالح. يجب توفير القيمة المنطقية isPrivate.",
+    "fr": "Corps de requete invalide. Le booleen 'isPrivate' est requis.",
+    "es": "Cuerpo invalido. Se requiere el booleano 'isPrivate'."
+  },
+  "ERR_REQUEST_VALIDATION_FAILED": {
+    "en": "Request validation failed",
+    "ar": "فشل التحقق من صحة الطلب",
+    "fr": "La validation de la requete a echoue",
+    "es": "La validacion de la solicitud fallo"
+  },
+  "MISSING_WALLET_AUTH": {
+    "en": "Missing wallet auth",
+    "ar": "معلومات مصادقة المحفظة مفقودة",
+    "fr": "Authentification du portefeuille manquante",
+    "es": "Falta la autenticacion de la billetera"
+  },
+  "INVALID_ADDRESS": {
+    "en": "Invalid Stellar address",
+    "ar": "عنوان Stellar غير صالح",
+    "fr": "Adresse Stellar invalide",
+    "es": "Direccion Stellar no valida"
+  },
+  "INVALID_NONCE": {
+    "en": "Invalid or expired nonce",
+    "ar": "قيمة nonce غير صالحة او منتهية الصلاحية",
+    "fr": "Nonce invalide ou expire",
+    "es": "Nonce invalido o expirado"
+  },
+  "INVALID_SIGNATURE": {
+    "en": "Invalid signature",
+    "ar": "التوقيع غير صالح",
+    "fr": "Signature invalide",
+    "es": "Firma no valida"
+  },
+  "ERR_AUTH_UNAVAILABLE": {
+    "en": "Auth unavailable",
+    "ar": "خدمة المصادقة غير متاحة",
+    "fr": "Authentification indisponible",
+    "es": "Autenticacion no disponible"
+  },
+  "ERR_RATE_LIMIT_UNAVAILABLE": {
+    "en": "Rate limit unavailable",
+    "ar": "خدمة تحديد المعدل غير متاحة",
+    "fr": "Limitation de debit indisponible",
+    "es": "Limite de solicitudes no disponible"
+  },
+  "ERR_TOO_MANY_REQUESTS": {
+    "en": "Too Many Requests",
+    "ar": "عدد كبير جدا من الطلبات",
+    "fr": "Trop de requetes",
+    "es": "Demasiadas solicitudes"
+  },
+  "ERR_NOT_IMPLEMENTED": {
+    "en": "Not implemented",
+    "ar": "غير متاح بعد",
+    "fr": "Non implemente",
+    "es": "No implementado"
+  },
+  "ERR_INTERNAL_SERVER_ERROR": {
+    "en": "Internal server error",
+    "ar": "خطا داخلي في الخادم",
+    "fr": "Erreur interne du serveur",
+    "es": "Error interno del servidor"
+  }
+}

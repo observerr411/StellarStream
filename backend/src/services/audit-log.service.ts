@@ -20,6 +20,10 @@ export interface EventLogEntry {
   receiver?: string;
   amount?: bigint;
   metadata?: Record<string, unknown>;
+  /**
+   * Deterministic hash computed from on-chain event XDR.
+   */
+  eventHash?: string;
 }
 
 export interface AuditLogItem {
@@ -47,6 +51,15 @@ export class AuditLogService {
     try {
       const eventIndex = entry.eventIndex ?? 0;
       const data = {
+        metadata: entry.metadata
+          ? JSON.stringify(
+              entry.eventHash
+                ? { ...entry.metadata, __eventHash: entry.eventHash }
+                : entry.metadata,
+            )
+          : entry.eventHash
+          ? JSON.stringify({ __eventHash: entry.eventHash })
+          : null,
         eventType: entry.eventType,
         streamId: entry.streamId,
         txHash: entry.txHash,
@@ -56,7 +69,6 @@ export class AuditLogService {
         sender: entry.sender ?? null,
         receiver: entry.receiver ?? null,
         amount: entry.amount ?? null,
-        metadata: entry.metadata ? JSON.stringify(entry.metadata) : null,
       };
 
       await prisma.eventLog.upsert({

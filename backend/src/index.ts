@@ -9,7 +9,10 @@ import helmet from "helmet";
 import cors from "cors";
 import apiRouter from "./api/index.js";
 import { authMiddleware } from "./middleware/auth.js";
-import { rateLimitMiddleware, sensitiveRateLimitMiddleware } from "./middleware/rateLimit.js";
+import {
+  rateLimitMiddleware,
+  sensitiveRateLimitMiddleware,
+} from "./middleware/rateLimit.js";
 import { requireWalletAuth } from "./middleware/requireWalletAuth.js";
 import { getStats, getSearch } from "./api/public.js";
 import { getNonce, getMe } from "./api/auth.js";
@@ -20,6 +23,8 @@ import healthRoutes from "./api/health.routes.js";
 import testRoutes from "./api/test.js";
 import { scheduleSnapshotMaintenance } from "./services/snapshot.scheduler.js";
 import { StaleStreamCleanupWorker } from "./stale-stream-cleanup.worker.js";
+import { DataIntegrityWorker } from "./data-integrity.worker.js";
+import { YieldAccrualWorker } from "./yield-accrual.worker.js";
 import { bigintSerializer } from "./middleware/bigintSerializer.js";
 import { swaggerSpec } from "./swagger.js";
 
@@ -41,6 +46,8 @@ const io = new SocketIOServer(server, {
 const PORT = process.env.PORT ?? 3000;
 export const wsService = new WebSocketService(io);
 const cleanupWorker = new StaleStreamCleanupWorker();
+const dataIntegrityWorker = new DataIntegrityWorker();
+const yieldAccrualWorker = new YieldAccrualWorker();
 
 // ── Security middleware ────────────────────────────────────────────────────────
 app.use(
@@ -54,7 +61,7 @@ app.use(
       },
     },
     hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
-  })
+  }),
 );
 
 const allowedOrigins = process.env.FRONTEND_URL
@@ -71,7 +78,7 @@ app.use(
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "X-Api-Key"],
-  })
+  }),
 );
 
 app.use(bigintSerializer);
@@ -95,15 +102,23 @@ const authRouter = express.Router();
 authRouter.get("/nonce", rateLimitMiddleware, getNonce);
 authRouter.get("/me", rateLimitMiddleware, requireWalletAuth, getMe);
 // Sensitive: 5 req/min on challenge endpoint
-authRouter.post("/challenge", sensitiveRateLimitMiddleware, (_req: Request, res: Response) => {
-  res.status(501).json({ error: "Not implemented", code: 501 });
-});
+authRouter.post(
+  "/challenge",
+  sensitiveRateLimitMiddleware,
+  (_req: Request, res: Response) => {
+    res.status(501).json({ error: "Not implemented", code: 501 });
+  },
+);
 app.use("/api/v1/auth", authRouter);
 
 // ── Webhook routes (sensitive: 5 req/min) ────────────────────────────────────
-app.post("/webhook/register", sensitiveRateLimitMiddleware, (_req: Request, res: Response) => {
-  res.status(501).json({ error: "Not implemented", code: 501 });
-});
+app.post(
+  "/webhook/register",
+  sensitiveRateLimitMiddleware,
+  (_req: Request, res: Response) => {
+    res.status(501).json({ error: "Not implemented", code: 501 });
+  },
+);
 
 // ── Public routes (stats / search) ───────────────────────────────────────────
 app.get("/api/v1/stats", rateLimitMiddleware, getStats);
@@ -130,10 +145,9 @@ app.get("/ws-status", (_req: Request, res: Response) => {
   res.json({
     connectedUsers: wsService.getConnectedUsers(),
     userConnections: Object.fromEntries(
-      wsService.getConnectedUsers().map((addr) => [
-        addr,
-        wsService.getUserSocketCount(addr),
-      ])
+      wsService
+        .getConnectedUsers()
+        .map((addr) => [addr, wsService.getUserSocketCount(addr)]),
     ),
   });
 });
@@ -146,6 +160,8 @@ async function start(): Promise<void> {
   await ensureRedis();
   scheduleSnapshotMaintenance();
   cleanupWorker.start();
+  dataIntegrityWorker.start();
+  yieldAccrualWorker.start();
 
   server.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);
@@ -157,6 +173,8 @@ async function start(): Promise<void> {
 function shutdown(signal: string): void {
   console.log(`${signal} received, shutting down gracefully...`);
   cleanupWorker.stop();
+  dataIntegrityWorker.stop();
+  yieldAccrualWorker.stop();
   closeRedis()
     .then(() => prisma.$disconnect())
     .then(() => {

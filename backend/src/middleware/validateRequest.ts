@@ -30,6 +30,7 @@ const validateRequest = (schemas: RequestSchemas): RequestHandler => {
       if (err instanceof ZodError) {
         res.status(400).json({
           success: false,
+          code: "ERR_REQUEST_VALIDATION_FAILED",
           error: "Request validation failed",
           details: err.issues,
         });
@@ -39,6 +40,6 @@ const validateRequest = (schemas: RequestSchemas): RequestHandler => {
       next(err);
     }
   };
-}
+};
 
 export default validateRequest;

@@ -13,23 +13,63 @@ datasource db {
 
 // Mirrors the Stream state from the Soroban smart contract
 model Stream {
-  id           String       @id @default(cuid())
-  streamId     String?      @unique // Contract-level Stream ID
-  txHash       String       @unique
-  sender       String
-  receiver     String
-  tokenAddress String?
-  amount       String // Store as string to handle large numbers safely
-  duration     Int?
-  status       StreamStatus @default(ACTIVE)
-  withdrawn    String?      @default("0")
-  legacy       Boolean      @default(false) // true = originated from V1 contract
-  migrated     Boolean      @default(false) // true = V1 stream superseded by V2
+  id                 String       @id @default(cuid())
+  streamId           String?      @unique // Contract-level Stream ID
+  txHash             String       @unique
+  sender             String
+  receiver           String
+  tokenAddress       String?
+  amount             String // Store as string to handle large numbers safely
+  duration           Int?
+  version            Int          @default(1)
+  status             StreamStatus @default(ACTIVE)
+  withdrawn          String?      @default("0")
+  legacy             Boolean      @default(false) // true = originated from V1 contract
+  migrated           Boolean      @default(false) // true = V1 stream superseded by V2
+  isPrivate          Boolean      @default(false)
+  yieldEnabled       Boolean      @default(false) @map("yield_enabled")
+  contractId         String?      @map("contract_id")
+  vaultContractId    String?
+  vaultShareBalance  String?
+  vaultRatioScale    String?
+  accruedInterest    String       @default("0")
+  lastYieldAccrualAt DateTime?
+  createdAt          DateTime     @default(now())
 
   @@index([sender])
   @@index([receiver])
   @@index([streamId])
   @@index([legacy])
+  @@index([yieldEnabled, status])
+}
+
+model ContractEvent {
+  id                       String   @id @default(cuid())
+  eventId                  String   @unique @map("event_id")
+  contractId               String   @map("contract_id")
+  ledgerSequence           Int      @map("ledger_sequence")
+  ledgerClosedAt           String   @map("ledger_closed_at")
+  txHash                   String   @map("tx_hash")
+  eventType                String   @map("event_type")
+  eventIndex               Int      @default(0) @map("event_index")
+  topicsXdr                String[] @map("topics_xdr")
+  valueXdr                 String   @map("value_xdr")
+  decodedTopics            Json?    @map("decoded_topics")
+  decodedValue             Json?    @map("decoded_value")
+  inSuccessfulContractCall Boolean  @default(true) @map("in_successful_contract_call")
+  createdAt                DateTime @default(now())
+
+  @@index([contractId, ledgerSequence])
+  @@index([txHash, eventIndex])
+}
+
+// Token prices for leaderboard volume calculations
+model TokenPrice {
+  tokenAddress String   @id
+  symbol       String
+  decimals     Int      @default(7)
+  priceUsd     Float    @default(0)
+  updatedAt    DateTime @updatedAt
 }
 
 // Registered Webhooks for external notifications
@@ -153,6 +193,7 @@ enum StreamStatus {
   PAUSED
   COMPLETED
   CANCELED
+  ARCHIVED // V1 stream successfully migrated to V2 — hidden from active UI
 }
 
 // API keys for 3rd-party partner dApps with elevated rate limits
@@ -176,4 +217,25 @@ model LedgerHash {
   sequence  Int      @id
   hash      String
   createdAt DateTime @default(now())
+}
+
+// Notification subscriptions — maps a Stellar address to a Discord/Telegram endpoint
+model NotificationSubscription {
+  id             String               @id @default(cuid())
+  stellarAddress String // Receiver address to watch
+  platform       NotificationPlatform // discord | telegram
+  webhookUrl     String? // Discord: full webhook URL
+  chatId         String? // Telegram: chat/user ID
+  isActive       Boolean              @default(true)
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+
+  @@unique([stellarAddress, platform])
+  @@index([stellarAddress])
+  @@index([platform])
+}
+
+enum NotificationPlatform {
+  discord
+  telegram
 }
