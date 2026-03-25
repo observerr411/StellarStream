@@ -6,7 +6,11 @@ import ProposalVoting from "@/components/governance/ProposalVoting";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type ProposalStatus = "active" | "urgent" | "passed" | "failed";
-type ProposalCategory = "Fee Structure" | "Pool Addition" | "Treasury" | "Security";
+type ProposalCategory =
+  | "Fee Structure"
+  | "Pool Addition"
+  | "Treasury"
+  | "Security";
 type VoteChoice = "for" | "against" | null;
 
 interface Proposal {
@@ -117,10 +121,14 @@ const PROTOCOL_STATS = [
 ];
 
 const CATEGORY_STYLES: Record<ProposalCategory, { pill: string }> = {
-  "Fee Structure": { pill: "bg-indigo-400/10 border-indigo-400/30 text-indigo-400" },
-  "Pool Addition": { pill: "bg-emerald-400/10 border-emerald-400/30 text-emerald-400" },
-  Treasury:        { pill: "bg-amber-400/10 border-amber-400/30 text-amber-400" },
-  Security:        { pill: "bg-red-400/10 border-red-400/30 text-red-400" },
+  "Fee Structure": {
+    pill: "bg-indigo-400/10 border-indigo-400/30 text-indigo-400",
+  },
+  "Pool Addition": {
+    pill: "bg-emerald-400/10 border-emerald-400/30 text-emerald-400",
+  },
+  Treasury: { pill: "bg-amber-400/10 border-amber-400/30 text-amber-400" },
+  Security: { pill: "bg-red-400/10 border-red-400/30 text-red-400" },
 };
 
 const fmt = (n: number) =>
@@ -128,7 +136,13 @@ const fmt = (n: number) =>
 
 // ─── Seal of Governance SVG ───────────────────────────────────────────────────
 
-function SealOfGovernance({ canPropose, power }: { canPropose: boolean; power: number }) {
+function SealOfGovernance({
+  canPropose,
+  power,
+}: {
+  canPropose: boolean;
+  power: number;
+}) {
   const [rotation, setRotation] = useState(0);
   const frameRef = useRef<number>(0);
 
@@ -169,24 +183,77 @@ function SealOfGovernance({ canPropose, power }: { canPropose: boolean; power: n
         }}
         aria-label="Seal of Governance"
       >
-        <circle cx={70} cy={70} r={66} fill="none" stroke={canPropose ? "#8a00ff" : "#2d0066"} strokeWidth={1.5} strokeDasharray="4 3" />
-        <circle cx={70} cy={70} r={60} fill="none" stroke={canPropose ? "#b84dff" : "#5b00b8"} strokeWidth={3} strokeDasharray={`${dash} ${circumference}`} strokeLinecap="round" transform="rotate(-90 70 70)" opacity={0.85} />
-        <polygon points="70,18 101,29 122,56 122,84 101,111 70,122 39,111 18,84 18,56 39,29" fill="rgba(138,0,255,0.07)" stroke={canPropose ? "#8a00ff" : "#2d0066"} strokeWidth={1.5} />
-        <polygon points="70,36 75,58 97,58 80,71 87,93 70,80 53,93 60,71 43,58 65,58" fill={canPropose ? "rgba(184,77,255,0.25)" : "rgba(91,0,184,0.1)"} stroke={canPropose ? "#c084fc" : "#5b00b8"} strokeWidth={1} />
-        <circle cx={70} cy={70} r={6} fill={canPropose ? "#b84dff" : "#5b00b8"} />
+        <circle
+          cx={70}
+          cy={70}
+          r={66}
+          fill="none"
+          stroke={canPropose ? "#8a00ff" : "#2d0066"}
+          strokeWidth={1.5}
+          strokeDasharray="4 3"
+        />
+        <circle
+          cx={70}
+          cy={70}
+          r={60}
+          fill="none"
+          stroke={canPropose ? "#b84dff" : "#5b00b8"}
+          strokeWidth={3}
+          strokeDasharray={`${dash} ${circumference}`}
+          strokeLinecap="round"
+          transform="rotate(-90 70 70)"
+          opacity={0.85}
+        />
+        <polygon
+          points="70,18 101,29 122,56 122,84 101,111 70,122 39,111 18,84 18,56 39,29"
+          fill="rgba(138,0,255,0.07)"
+          stroke={canPropose ? "#8a00ff" : "#2d0066"}
+          strokeWidth={1.5}
+        />
+        <polygon
+          points="70,36 75,58 97,58 80,71 87,93 70,80 53,93 60,71 43,58 65,58"
+          fill={canPropose ? "rgba(184,77,255,0.25)" : "rgba(91,0,184,0.1)"}
+          stroke={canPropose ? "#c084fc" : "#5b00b8"}
+          strokeWidth={1}
+        />
+        <circle
+          cx={70}
+          cy={70}
+          r={6}
+          fill={canPropose ? "#b84dff" : "#5b00b8"}
+        />
         {runeAngles.map((deg, i) => {
           const rad = (deg * Math.PI) / 180;
-          return <circle key={i} cx={70 + 52 * Math.cos(rad)} cy={70 + 52 * Math.sin(rad)} r={2.5} fill={canPropose ? "#8a00ff" : "#2d0066"} opacity={canPropose ? 0.9 : 0.4} />;
+          return (
+            <circle
+              key={i}
+              cx={70 + 52 * Math.cos(rad)}
+              cy={70 + 52 * Math.sin(rad)}
+              r={2.5}
+              fill={canPropose ? "#8a00ff" : "#2d0066"}
+              opacity={canPropose ? 0.9 : 0.4}
+            />
+          );
         })}
         <defs>
           <path id="councilArc" d="M 20,70 A 50,50 0 0,1 120,70" />
         </defs>
-        <text fontSize={7.5} fill={canPropose ? "#c084fc" : "#5b00b8"} letterSpacing={2.5}>
-          <textPath href="#councilArc" startOffset="8%">COUNCIL · OF · FLOW</textPath>
+        <text
+          fontSize={7.5}
+          fill={canPropose ? "#c084fc" : "#5b00b8"}
+          letterSpacing={2.5}
+        >
+          <textPath href="#councilArc" startOffset="8%">
+            COUNCIL · OF · FLOW
+          </textPath>
         </text>
       </svg>
-      <p className={`absolute bottom-0 font-ticker text-[10px] tracking-[0.18em] uppercase ${canPropose ? "text-[#b84dff]" : "text-[#5b00b8]"}`}>
-        {canPropose ? "⬡ Proposal Rights Active" : `${Math.round(progress)}% to Proposal Rights`}
+      <p
+        className={`absolute bottom-0 font-ticker text-[10px] tracking-[0.18em] uppercase ${canPropose ? "text-[#b84dff]" : "text-[#5b00b8]"}`}
+      >
+        {canPropose
+          ? "⬡ Proposal Rights Active"
+          : `${Math.round(progress)}% to Proposal Rights`}
       </p>
     </div>
   );
@@ -194,7 +261,15 @@ function SealOfGovernance({ canPropose, power }: { canPropose: boolean; power: n
 
 // ─── Proposal Card ────────────────────────────────────────────────────────────
 
-function ProposalCard({ proposal, index, onClick }: { proposal: Proposal; index: number; onClick: () => void }) {
+function ProposalCard({
+  proposal,
+  index,
+  onClick,
+}: {
+  proposal: Proposal;
+  index: number;
+  onClick: () => void;
+}) {
   const [voted, setVoted] = useState<VoteChoice>(null);
 
   const total = proposal.votesFor + proposal.votesAgainst;
@@ -212,19 +287,29 @@ function ProposalCard({ proposal, index, onClick }: { proposal: Proposal; index:
       {/* Top row */}
       <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="font-ticker text-[10px] tracking-[0.18em] text-white/30 uppercase">{proposal.id}</span>
-          <span className={`font-ticker text-[10px] px-2.5 py-0.5 rounded-full border ${catStyle.pill}`}>{proposal.category}</span>
+          <span className="font-ticker text-[10px] tracking-[0.18em] text-white/30 uppercase">
+            {proposal.id}
+          </span>
+          <span
+            className={`font-ticker text-[10px] px-2.5 py-0.5 rounded-full border ${catStyle.pill}`}
+          >
+            {proposal.category}
+          </span>
           {isUrgent && (
             <span className="font-ticker text-[10px] px-2.5 py-0.5 rounded-full border border-red-400/40 bg-red-400/10 text-red-400 animate-pulse">
               ⚡ URGENT
             </span>
           )}
         </div>
-        <span className="font-ticker text-[10px] text-white/30 whitespace-nowrap">{proposal.endsIn} left</span>
+        <span className="font-ticker text-[10px] text-white/30 whitespace-nowrap">
+          {proposal.endsIn} left
+        </span>
       </div>
 
       {/* Title */}
-      <h3 className="font-heading text-lg font-bold text-white/90 mb-2 leading-snug">{proposal.title}</h3>
+      <h3 className="font-heading text-lg font-bold text-white/90 mb-2 leading-snug">
+        {proposal.title}
+      </h3>
 
       {/* Description – visible on hover */}
       <p className="font-body text-xs text-white/40 leading-relaxed mb-4 max-h-0 overflow-hidden group-hover:max-h-20 transition-all duration-300">
@@ -234,24 +319,46 @@ function ProposalCard({ proposal, index, onClick }: { proposal: Proposal; index:
       {/* Vote bar */}
       <div className="mb-3">
         <div className="h-1.5 rounded-full bg-red-400/15 overflow-hidden mb-1.5">
-          <div className="h-full rounded-full transition-all duration-700" style={{ width: `${forPct}%`, background: "linear-gradient(90deg, #8a00ff, #b84dff)" }} />
+          <div
+            className="h-full rounded-full transition-all duration-700"
+            style={{
+              width: `${forPct}%`,
+              background: "linear-gradient(90deg, #8a00ff, #b84dff)",
+            }}
+          />
         </div>
         <div className="flex justify-between">
-          <span className="font-ticker text-[10px] text-[#b84dff]">For {forPct.toFixed(1)}% · {(proposal.votesFor / 1_000_000).toFixed(2)}M</span>
-          <span className="font-ticker text-[10px] text-red-400">{(proposal.votesAgainst / 1_000_000).toFixed(2)}M · {(100 - forPct).toFixed(1)}% Against</span>
+          <span className="font-ticker text-[10px] text-[#b84dff]">
+            For {forPct.toFixed(1)}% ·{" "}
+            {(proposal.votesFor / 1_000_000).toFixed(2)}M
+          </span>
+          <span className="font-ticker text-[10px] text-red-400">
+            {(proposal.votesAgainst / 1_000_000).toFixed(2)}M ·{" "}
+            {(100 - forPct).toFixed(1)}% Against
+          </span>
         </div>
       </div>
 
       {/* Quorum */}
       <div className="mb-5">
         <div className="flex justify-between mb-1">
-          <span className="font-ticker text-[10px] text-white/25 uppercase tracking-widest">Quorum</span>
-          <span className={`font-ticker text-[10px] ${quorumPct >= 100 ? "text-emerald-400" : "text-white/25"}`}>
+          <span className="font-ticker text-[10px] text-white/25 uppercase tracking-widest">
+            Quorum
+          </span>
+          <span
+            className={`font-ticker text-[10px] ${quorumPct >= 100 ? "text-emerald-400" : "text-white/25"}`}
+          >
             {quorumPct.toFixed(0)}%{quorumPct >= 100 ? " ✓ Reached" : ""}
           </span>
         </div>
         <div className="h-0.5 rounded-full bg-white/[0.06]">
-          <div className="h-full rounded-full transition-all duration-700" style={{ width: `${quorumPct}%`, background: quorumPct >= 100 ? "#34d399" : "rgba(138,0,255,0.5)" }} />
+          <div
+            className="h-full rounded-full transition-all duration-700"
+            style={{
+              width: `${quorumPct}%`,
+              background: quorumPct >= 100 ? "#34d399" : "rgba(138,0,255,0.5)",
+            }}
+          />
         </div>
       </div>
 
@@ -259,8 +366,16 @@ function ProposalCard({ proposal, index, onClick }: { proposal: Proposal; index:
       <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
         {(
           [
-            { label: "Vote For",     val: "for"     as const, active: "border-[#8a00ff]/50 bg-[#8a00ff]/15 text-[#b84dff]" },
-            { label: "Vote Against", val: "against" as const, active: "border-red-400/40 bg-red-400/10 text-red-400" },
+            {
+              label: "Vote For",
+              val: "for" as const,
+              active: "border-[#8a00ff]/50 bg-[#8a00ff]/15 text-[#b84dff]",
+            },
+            {
+              label: "Vote Against",
+              val: "against" as const,
+              active: "border-red-400/40 bg-red-400/10 text-red-400",
+            },
           ] as const
         ).map(({ label, val, active }) => (
           <button
@@ -272,7 +387,8 @@ function ProposalCard({ proposal, index, onClick }: { proposal: Proposal; index:
                 : "border-white/10 bg-white/[0.03] text-white/30 hover:border-[#8a00ff]/30 hover:text-white/60"
             }`}
           >
-            {voted === val ? "✓ " : ""}{label}
+            {voted === val ? "✓ " : ""}
+            {label}
           </button>
         ))}
       </div>
@@ -280,7 +396,9 @@ function ProposalCard({ proposal, index, onClick }: { proposal: Proposal; index:
       {/* Click hint */}
       <p className="font-ticker text-[10px] text-white/20 mt-3 flex justify-between">
         <span>Proposed by {proposal.proposer}</span>
-        <span className="text-[#8a00ff]/50 group-hover:text-[#b84dff] transition-colors duration-200">Click to vote →</span>
+        <span className="text-[#8a00ff]/50 group-hover:text-[#b84dff] transition-colors duration-200">
+          Click to vote →
+        </span>
       </p>
     </div>
   );
@@ -292,43 +410,82 @@ function VotingPowerPanel() {
   const canPropose = USER_STATS.votingPower >= USER_STATS.proposalThreshold;
 
   return (
-    <div className={`rounded-3xl border backdrop-blur-xl p-6 relative overflow-hidden transition-all duration-500 ${canPropose ? "border-[#8a00ff]/40 bg-[#8a00ff]/[0.06] shadow-[0_0_40px_rgba(138,0,255,0.15)]" : "border-white/10 bg-white/[0.04]"}`}>
+    <div
+      className={`rounded-3xl border backdrop-blur-xl p-6 relative overflow-hidden transition-all duration-500 ${canPropose ? "border-[#8a00ff]/40 bg-[#8a00ff]/[0.06] shadow-[0_0_40px_rgba(138,0,255,0.15)]" : "border-white/10 bg-white/[0.04]"}`}
+    >
       {canPropose && (
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,rgba(138,0,255,0.1)_0%,transparent_60%)] pointer-events-none" />
       )}
       <div className="relative">
         <div className="flex items-center justify-between mb-1">
-          <span className="font-ticker text-[10px] tracking-[0.2em] text-white/30 uppercase">Voting Power</span>
-          <span className="font-ticker text-[10px] px-2.5 py-0.5 rounded-full border border-[#8a00ff]/30 bg-[#8a00ff]/10 text-[#b84dff]">{USER_STATS.rank}</span>
+          <span className="font-ticker text-[10px] tracking-[0.2em] text-white/30 uppercase">
+            Voting Power
+          </span>
+          <span className="font-ticker text-[10px] px-2.5 py-0.5 rounded-full border border-[#8a00ff]/30 bg-[#8a00ff]/10 text-[#b84dff]">
+            {USER_STATS.rank}
+          </span>
         </div>
         <div className="mb-1">
-          <span className="font-heading text-4xl font-bold text-white">{fmt(USER_STATS.votingPower)}</span>
+          <span className="font-heading text-4xl font-bold text-white">
+            {fmt(USER_STATS.votingPower)}
+          </span>
           <span className="font-ticker text-sm text-white/30 ml-2">VP</span>
         </div>
-        <SealOfGovernance canPropose={canPropose} power={USER_STATS.votingPower} />
+        <SealOfGovernance
+          canPropose={canPropose}
+          power={USER_STATS.votingPower}
+        />
         <div className="space-y-3 mt-2">
           {[
-            { label: "Staked XLM",  value: USER_STATS.stakedXLM,  color: "#00f5ff" },
-            { label: "Staked STRM", value: USER_STATS.stakedSTRM, color: "#b84dff" },
+            {
+              label: "Staked XLM",
+              value: USER_STATS.stakedXLM,
+              color: "#00f5ff",
+            },
+            {
+              label: "Staked STRM",
+              value: USER_STATS.stakedSTRM,
+              color: "#b84dff",
+            },
           ].map(({ label, value, color }) => (
             <div key={label}>
               <div className="flex justify-between mb-1.5">
-                <span className="font-ticker text-[10px] text-white/30 uppercase tracking-widest">{label}</span>
-                <span className="font-ticker text-[10px]" style={{ color }}>{fmt(value)}</span>
+                <span className="font-ticker text-[10px] text-white/30 uppercase tracking-widest">
+                  {label}
+                </span>
+                <span className="font-ticker text-[10px]" style={{ color }}>
+                  {fmt(value)}
+                </span>
               </div>
               <div className="h-0.5 rounded-full bg-white/[0.06]">
-                <div className="h-full rounded-full" style={{ width: `${(value / USER_STATS.votingPower) * 100}%`, background: `linear-gradient(90deg, ${color}55, ${color})` }} />
+                <div
+                  className="h-full rounded-full"
+                  style={{
+                    width: `${(value / USER_STATS.votingPower) * 100}%`,
+                    background: `linear-gradient(90deg, ${color}55, ${color})`,
+                  }}
+                />
               </div>
             </div>
           ))}
         </div>
         <div className="mt-5 p-3.5 rounded-2xl border border-[#8a00ff]/20 bg-[#8a00ff]/[0.07]">
           <div className="flex justify-between items-center">
-            <span className="font-ticker text-[10px] text-white/30 uppercase tracking-widest">Participation Rate</span>
-            <span className="font-heading text-xl font-bold text-[#b84dff]">{USER_STATS.participationRate}%</span>
+            <span className="font-ticker text-[10px] text-white/30 uppercase tracking-widest">
+              Participation Rate
+            </span>
+            <span className="font-heading text-xl font-bold text-[#b84dff]">
+              {USER_STATS.participationRate}%
+            </span>
           </div>
           <div className="h-0.5 rounded-full bg-white/[0.06] mt-2">
-            <div className="h-full rounded-full" style={{ width: `${USER_STATS.participationRate}%`, background: "linear-gradient(90deg, #8a00ff, #b84dff)" }} />
+            <div
+              className="h-full rounded-full"
+              style={{
+                width: `${USER_STATS.participationRate}%`,
+                background: "linear-gradient(90deg, #8a00ff, #b84dff)",
+              }}
+            />
           </div>
         </div>
         <button
@@ -339,7 +496,9 @@ function VotingPowerPanel() {
               : "bg-white/[0.04] border border-white/10 text-white/20 cursor-not-allowed"
           }`}
         >
-          {canPropose ? "⬡ Create Proposal" : `Need ${fmt(USER_STATS.proposalThreshold - USER_STATS.votingPower)} more VP`}
+          {canPropose
+            ? "⬡ Create Proposal"
+            : `Need ${fmt(USER_STATS.proposalThreshold - USER_STATS.votingPower)} more VP`}
         </button>
       </div>
     </div>
@@ -352,9 +511,16 @@ function StatsBar() {
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 rounded-3xl border border-white/10 bg-white/[0.04] overflow-hidden mb-8">
       {PROTOCOL_STATS.map((stat, i) => (
-        <div key={stat.label} className={`px-5 py-4 ${i < PROTOCOL_STATS.length - 1 ? "border-r border-white/[0.06]" : ""}`}>
-          <p className="font-ticker text-[10px] tracking-widest text-white/30 uppercase mb-1">{stat.label}</p>
-          <p className="font-heading text-2xl font-bold text-white">{stat.value}</p>
+        <div
+          key={stat.label}
+          className={`px-5 py-4 ${i < PROTOCOL_STATS.length - 1 ? "border-r border-white/[0.06]" : ""}`}
+        >
+          <p className="font-ticker text-[10px] tracking-widest text-white/30 uppercase mb-1">
+            {stat.label}
+          </p>
+          <p className="font-heading text-2xl font-bold text-white">
+            {stat.value}
+          </p>
         </div>
       ))}
     </div>
@@ -366,7 +532,9 @@ function StatsBar() {
 function VotingModal({ onClose }: { onClose: () => void }) {
   // Close on Escape key
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [onClose]);
@@ -444,20 +612,33 @@ export default function GovernanceHubPage() {
   const [filter, setFilter] = useState<FilterType>("all");
   const [selectedProposal, setSelectedProposal] = useState<string | null>(null);
 
-  const filters: FilterType[] = ["all", "Fee Structure", "Pool Addition", "Treasury", "Security"];
-  const filtered = filter === "all" ? PROPOSALS : PROPOSALS.filter((p) => p.category === filter);
+  const filters: FilterType[] = [
+    "all",
+    "Fee Structure",
+    "Pool Addition",
+    "Treasury",
+    "Security",
+  ];
+  const filtered =
+    filter === "all"
+      ? PROPOSALS
+      : PROPOSALS.filter((p) => p.category === filter);
 
   return (
     <div className="min-h-screen p-4 md:p-6 space-y-4">
-
       {/* ── Page Header ── */}
       <section className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-6 md:p-8">
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
-            <p className="font-body text-xs tracking-[0.12em] text-white/60 uppercase">Protocol Governance</p>
-            <h1 className="font-heading mt-2 text-3xl md:text-5xl liquid-chrome">The Council of Flow</h1>
+            <p className="font-body text-xs tracking-[0.12em] text-white/60 uppercase">
+              Protocol Governance
+            </p>
+            <h1 className="font-heading mt-2 text-3xl md:text-5xl liquid-chrome">
+              The Council of Flow
+            </h1>
             <p className="font-body mt-3 text-white/60 max-w-lg text-sm leading-relaxed">
-              Shape the protocol. Vote on parameter changes, allocate treasury funds, and guide the future of StellarStream.
+              Shape the protocol. Vote on parameter changes, allocate treasury
+              funds, and guide the future of StellarStream.
             </p>
           </div>
           <div className="flex gap-2 flex-shrink-0 pt-1">
@@ -466,7 +647,9 @@ export default function GovernanceHubPage() {
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#b84dff] opacity-75" />
                 <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#b84dff]" />
               </span>
-              <span className="font-ticker text-[10px] tracking-widest text-[#b84dff] uppercase">4 Active</span>
+              <span className="font-ticker text-[10px] tracking-widest text-[#b84dff] uppercase">
+                4 Active
+              </span>
             </div>
           </div>
         </div>
@@ -477,7 +660,6 @@ export default function GovernanceHubPage() {
 
       {/* ── Bento Grid ── */}
       <div className="grid gap-4 lg:grid-cols-[1fr_320px] items-start">
-
         {/* LEFT – Proposals */}
         <div>
           {/* Filter pills */}
@@ -509,7 +691,9 @@ export default function GovernanceHubPage() {
             ))}
             {filtered.length === 0 && (
               <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-12 text-center">
-                <p className="font-body text-sm text-white/30">No proposals in this category.</p>
+                <p className="font-body text-sm text-white/30">
+                  No proposals in this category.
+                </p>
               </div>
             )}
           </div>
@@ -521,9 +705,12 @@ export default function GovernanceHubPage() {
 
           {/* Delegate */}
           <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
-            <p className="font-ticker text-[10px] tracking-[0.2em] text-white/30 uppercase mb-3">Delegation</p>
+            <p className="font-ticker text-[10px] tracking-[0.2em] text-white/30 uppercase mb-3">
+              Delegation
+            </p>
             <p className="font-body text-xs text-white/40 mb-3 leading-relaxed">
-              No active delegation. Delegate your voting power to a trusted council member.
+              No active delegation. Delegate your voting power to a trusted
+              council member.
             </p>
             <button className="w-full py-2.5 rounded-xl border border-white/10 bg-white/[0.03] font-body text-xs tracking-wider text-white/30 hover:border-[#8a00ff]/30 hover:text-[#b84dff] transition-all duration-200">
               ⬡ Delegate Power
@@ -532,13 +719,28 @@ export default function GovernanceHubPage() {
 
           {/* Past votes */}
           <div className="rounded-3xl border border-white/10 bg-white/[0.04] backdrop-blur-xl p-5">
-            <p className="font-ticker text-[10px] tracking-[0.2em] text-white/30 uppercase mb-4">Recent Votes</p>
+            <p className="font-ticker text-[10px] tracking-[0.2em] text-white/30 uppercase mb-4">
+              Recent Votes
+            </p>
             <div className="divide-y divide-white/[0.04]">
               {PAST_VOTES.map(({ id, vote, outcome }) => (
-                <div key={id} className="flex items-center justify-between py-2.5">
-                  <span className="font-ticker text-xs text-white/40">{id}</span>
-                  <span className={`font-ticker text-[10px] ${vote === "For" ? "text-[#b84dff]" : "text-red-400"}`}>{vote}</span>
-                  <span className={`font-ticker text-[10px] ${outcome === "Passed" ? "text-emerald-400" : "text-white/25"}`}>{outcome}</span>
+                <div
+                  key={id}
+                  className="flex items-center justify-between py-2.5"
+                >
+                  <span className="font-ticker text-xs text-white/40">
+                    {id}
+                  </span>
+                  <span
+                    className={`font-ticker text-[10px] ${vote === "For" ? "text-[#b84dff]" : "text-red-400"}`}
+                  >
+                    {vote}
+                  </span>
+                  <span
+                    className={`font-ticker text-[10px] ${outcome === "Passed" ? "text-emerald-400" : "text-white/25"}`}
+                  >
+                    {outcome}
+                  </span>
                 </div>
               ))}
             </div>
@@ -550,7 +752,6 @@ export default function GovernanceHubPage() {
       {selectedProposal && (
         <VotingModal onClose={() => setSelectedProposal(null)} />
       )}
-
     </div>
   );
 }
